@@ -1,28 +1,39 @@
 /* 
  * Automatically parses query string of the current page into an object and attaches it to window.location
  * The significant thing about this is it handles array syntax in the query string as well:
- * ?arg[0]=val1&arg[1]=val2
- * Become:
- * {arg:{0:"val1", 1:"val2"}}
+ * ?nested[0][1]=test&nested[0][2]=test12&layers[something]&unnested
+ * Becomes:
+ * {nested:{0:{1:"test", 2:"test12"}, something: true}, unnested: true}
  * 
  */
 
-(function (qstring){
-    if(qstring == '') return;
-    var m,
-      args = {}, 
-      re = /([^\[\=\&\?]+)(?:\[{1}([^\]]+)\]{1})?\={1}([^\&]+)/g;
-    while ((m = re.exec(qstring)) !== null) {
-        if (m.index === re.lastIndex) re.lastIndex++;
-        if(typeof m[2] != 'undefined'){
-            if(typeof args[m[1]] == 'undefined') args[m[1]] = {};
-            args[m[1]][m[2]] = m[3];
-        }else{
-            args[m[1]] = m[3];
-        }
-    }
-    window.location.args = args;
+(function(str){
+ 	if(str[0] == '?' || str[0] == '#') str=str.substring(1);
+  	var vals = str.split('&'),
+      	args={},
+      	kre = /([^\[\]]+)/g;
+  	for(var i=0; i<vals.length; i++){
+    		var parts = vals[i].split('='),
+		    val = (parts.length == 1) ? true : parts[1],
+    		    pntr=args,
+    		    keys=[];
+    		while ((m = kre.exec(parts[0])) !== null) {
+      			if (m.index === kre.lastIndex) kre.lastIndex++;
+      			keys.push(m[0]);
+    		}
+    		for(var j=0; j<keys.length; j++){
+    			if(j+1 == keys.length){
+      				pntr[keys[j]]=val;
+      			}else{
+      				if(typeof pntr[keys[j]] == 'undefined') pntr[keys[j]] = {};
+      				pntr=pntr[keys[j]];
+      			}
+    		}
+  	}
+	window.location.args = args;
 })(window.location.search);
+//testArgs = parseArgs("?nested[0][1]=test&nested[0][2]=test12&layers[something]&unnested");
+//console.log(testArgs.layers[0]);
 
 /*
  * Simple event handler to help determine if a mouse or touchscreen is being used.
