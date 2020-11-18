@@ -73,3 +73,31 @@
     //$.methodEvent('addClass');
     //$('.post-wrapper').on('addClass', function(e){console.log('A class has been added!'});
 })(jQuery);
+
+/*
+ * Basically adds some Array.prototype methods. This is not added to the object prototype for obvious reasons.
+ */
+
+class TomExt{
+    constructor(d){
+        if(!d) return;
+        if(d.constructor == Object) d = Object.entries(d);
+        if(d.constructor == Array) d.forEach(e => this[e[0]] = e[1]);
+    }
+    forEach(f){
+        Object.entries(this).forEach(e => f(...e.reverse()));
+        return this;
+    }
+    map(f){
+        this.forEach((v, k) => {
+            this[k] = f(v, k);
+        });
+        return this;
+    }
+    filter(f){
+        this.forEach((v, k) => {
+            if(!f(v, k)) delete this[k];
+        });
+        return this;
+    }
+}
